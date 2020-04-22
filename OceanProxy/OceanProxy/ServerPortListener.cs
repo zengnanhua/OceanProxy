@@ -40,9 +40,10 @@ namespace OceanProxy
         /// 上次接收tcp时间
         /// </summary>
         private DateTime PreAcceptTcpClientDateTime { get; set; }
-        public ServerPortListener(int port)
+        public ServerPortListener(int PublicPort,int PrivatePort)
         {
-            this.PublicPort = port;
+            this.PublicPort = PublicPort;
+            this.PrivatePort = PrivatePort;
         }
         public async Task StartListenerAsync()
         {
