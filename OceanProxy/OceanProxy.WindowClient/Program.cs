@@ -16,7 +16,7 @@ namespace OceanProxy.WindowClient
         {
 #if netcoreapp3_1
            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-#endif
+#endif 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Home());
