@@ -3,25 +3,30 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace OceanProxy.ConsoleClient
 {
     class Program
     {
         public static NetworkStream kongzhins = null;
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            try
-            {
-                TcpClient tc = new TcpClient();
-                tc.Connect(new IPEndPoint(IPAddress.Parse("192.168.2.179"), 8078));
-                kongzhins = tc.GetStream();
-                byte[] bt = Encoding.Default.GetBytes("ok");//这里发送一个连接提示
-                kongzhins.Write(bt, 0, bt.Length);
-                jieshou();
-                WaitHandle.WaitAll(new ManualResetEvent[] { new ManualResetEvent(false) });//这里为什么要这样呢?我发现sqlserver执行是localsystem账号如果console.read()程序马上退出
-            }
-            catch { }
+            ClientPortProxy proxy = new ClientPortProxy("116.196.118.27", 8078, "192.168.4.193", 50006);
+            await proxy.Start();
+            Console.WriteLine("已启动");
+            Console.ReadLine();
+            //try
+            //{
+            //    TcpClient tc = new TcpClient();
+            //    tc.Connect(new IPEndPoint(IPAddress.Parse("192.168.2.179"), 8078));
+            //    kongzhins = tc.GetStream();
+            //    byte[] bt = Encoding.Default.GetBytes("ok");//这里发送一个连接提示
+            //    kongzhins.Write(bt, 0, bt.Length);
+            //    jieshou();
+            //    WaitHandle.WaitAll(new ManualResetEvent[] { new ManualResetEvent(false) });//这里为什么要这样呢?我发现sqlserver执行是localsystem账号如果console.read()程序马上退出
+            //}
+            //catch { }
         }
         public static void jieshou()
         {

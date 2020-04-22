@@ -16,7 +16,7 @@ namespace OceanProxy
         /// <summary>
         /// 内部端口监听
         /// </summary>
-        public int PrivatePort { get; private set; }
+        public int PrivatePort { get; private set; } = 8078;
         private TcpListener _publicTcpListener { get; set; }
         private TcpListener _privateTcpListener { get; set; }
         /// <summary>
@@ -31,7 +31,7 @@ namespace OceanProxy
         /// <summary>
         /// 通知网络流
         /// </summary>
-        private NetworkStream _networkStream = null;
+        private NetworkStream _notifynetworkStream = null;
         /// <summary>
         /// 是否停止
         /// </summary>
@@ -54,19 +54,41 @@ namespace OceanProxy
 
         private async Task ListenerPublicPortAsync()
         {
-            _publicTcpListener = new TcpListener(IPAddress.Parse("0.0.0.0"), this.PublicPort);
+            _publicTcpListener = new TcpListener(IPAddress.Any,this.PublicPort);
+            _publicTcpListener.Start();
             while (!IsStop)
             {
-                var client = await _publicTcpListener.AcceptTcpClientAsync();
-                _publicRequestTcpClient.Add(GetRandomInt(), client);
+                try
+                {
+                    var client = await _publicTcpListener.AcceptTcpClientAsync();
+                    var biaoji = GetRandomInt();
+                    if (_notifynetworkStream != null)
+                    {
+                        _publicRequestTcpClient.Add(biaoji, client);
+                        byte[] bt = BitConverter.GetBytes(biaoji);
+                        _notifynetworkStream.Write(bt, 0, bt.Length);
+                    }
+                    else
+                    {
+                        client.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    
+                }
+                
             }
         }
         private async Task ListenerPrivatePortAsync()
         {
-            _privateTcpListener = new TcpListener(IPAddress.Parse("0.0.0.0"), this.PrivatePort);
+            _privateTcpListener = new TcpListener(IPAddress.Any, this.PrivatePort);
+            _privateTcpListener.Start();
             while (!IsStop)
             {
-                var client = await _privateTcpListener.AcceptTcpClientAsync();
+                TcpClient client = null;
+                client = await _privateTcpListener.AcceptTcpClientAsync();
+
                 //这里体现的是一个配对的问题，自己体会一下吧
                 NetworkStream ns = client.GetStream();
                 byte[] bt = new byte[4];
@@ -76,11 +98,11 @@ namespace OceanProxy
                     if (_notifyTcpClient != null)
                     {
                         //把之前通知对象的资源释放
-                        _notifyTcpClient.Dispose();
-                        _networkStream.Dispose();
+                        _notifyTcpClient?.Dispose();
+                        _notifynetworkStream?.Dispose();
                     }
                     _notifyTcpClient = client;
-                    _networkStream = ns;
+                    _notifynetworkStream = ns;
                 }
                 else
                 {
@@ -102,7 +124,7 @@ namespace OceanProxy
 
         private int GetRandomInt()
         {
-            Random rnd = new Random(Convert.ToInt32(DateTime.Now.Ticks));
+            Random rnd = new Random((int)DateTime.Now.Ticks);
             int biaoji = rnd.Next(1000000000, 2000000000);
             return biaoji;
         }
@@ -113,7 +135,7 @@ namespace OceanProxy
             _publicTcpListener.Stop();
             _privateTcpListener.Stop();
             _notifyTcpClient.Dispose();
-            _networkStream.Dispose();
+            _notifynetworkStream.Dispose();
         }
     }
 }

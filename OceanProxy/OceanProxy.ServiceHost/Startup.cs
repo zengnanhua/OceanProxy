@@ -45,8 +45,13 @@ namespace OceanProxy.ServiceHost
             {
                 endpoints.MapControllers();
             });
-
-            ServerProxy.Start(null);
+            Task.Run( async () =>
+            {
+                await new ServerPortListener(8079).StartListenerAsync();
+            });
+            
+            
+            //ServerProxy.Start(null);
         }
     }
 }
