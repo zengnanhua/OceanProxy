@@ -16,5 +16,10 @@ namespace OceanProxy.WindowClient
         {
             InitializeComponent();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("df");
+        }
     }
 }
