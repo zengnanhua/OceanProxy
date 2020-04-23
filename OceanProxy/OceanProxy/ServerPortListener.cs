@@ -92,31 +92,39 @@ namespace OceanProxy
 
                 //这里体现的是一个配对的问题，自己体会一下吧
                 NetworkStream ns = client.GetStream();
-                byte[] bt = new byte[4];
-                int count = ns.Read(bt, 0, bt.Length);
-                if (count == 2 && bt[0] == 0x6f && bt[1] == 0x6b)
+                try
                 {
-                    if (_notifyTcpClient != null)
+                    byte[] bt = new byte[4];
+                    int count = ns.Read(bt, 0, bt.Length);
+                    if (count == 2 && bt[0] == 0x6f && bt[1] == 0x6b)
                     {
-                        //把之前通知对象的资源释放
-                        _notifyTcpClient?.Dispose();
-                        _notifynetworkStream?.Dispose();
+                        if (_notifyTcpClient != null)
+                        {
+                            //把之前通知对象的资源释放
+                            _notifyTcpClient?.Dispose();
+                            _notifynetworkStream?.Dispose();
+                        }
+                        _notifyTcpClient = client;
+                        _notifynetworkStream = ns;
                     }
-                    _notifyTcpClient = client;
-                    _notifynetworkStream = ns;
+                    else
+                    {
+                        int biaoji = BitConverter.ToInt32(bt, 0);
+                        if (_publicRequestTcpClient.ContainsKey(biaoji))
+                        {
+                            TcpClient tempTcpClient = null;
+                            _publicRequestTcpClient.TryGetValue(biaoji, out tempTcpClient);
+                            _publicRequestTcpClient.Remove(biaoji);
+                            //创建通道对象
+                            TcpTunnel tcpTunnel = new TcpTunnel(client, tempTcpClient);
+                            tcpTunnel.Start();
+                        }
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    int biaoji = BitConverter.ToInt32(bt, 0);
-                    if (_publicRequestTcpClient.ContainsKey(biaoji))
-                    {
-                        TcpClient tempTcpClient = null;
-                        _publicRequestTcpClient.TryGetValue(biaoji, out tempTcpClient);
-                        _publicRequestTcpClient.Remove(biaoji);
-                        //创建通道对象
-                        TcpTunnel tcpTunnel = new TcpTunnel(client, tempTcpClient);
-                        tcpTunnel.Start();
-                    }
+                    client?.Dispose();
+                    ns?.Dispose();
                 }
 
             }
